@@ -1,0 +1,161 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rag-pipeline"
+version = "0.1.0"
+description = "RAG Pipeline - Codebase, Runbooks, and Documentation"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "Contributors" }
+]
+keywords = ["rag", "llm", "vector-search", "oci", "documentation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    # Core
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    
+    # API
+    "fastapi>=0.100",
+    "uvicorn[standard]>=0.20",
+    
+    # Vector Store
+    "chromadb>=0.4",
+    
+    # Embeddings
+    "sentence-transformers>=2.2",
+    
+    # Code Parsing
+    "tree-sitter>=0.20",
+    "tree-sitter-python>=0.20",
+    "tree-sitter-javascript>=0.20",
+    "tree-sitter-java>=0.20",
+    "tree-sitter-go>=0.20",
+    
+    # HTTP Client (for Ollama, OCI APIs)
+    "httpx>=0.24",
+    
+    # Async Support
+    "anyio>=4.0",
+    
+    # Logging
+    "structlog>=23.0",
+    
+    # Markdown parsing
+    "mistune>=3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "pytest-cov>=4.0",
+    "pytest-mock>=3.0",
+    "mypy>=1.0",
+    "ruff>=0.1",
+    "pre-commit>=3.0",
+]
+
+# Future OCI integration
+oci = [
+    "oci>=2.100",
+]
+
+# Future cloud integrations
+cloud = [
+    "openai>=1.0",
+    "anthropic>=0.20",
+    "slack-sdk>=3.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/oci/rag-pipeline"
+"Bug Tracker" = "https://github.com/oci/rag-pipeline/issues"
+
+[project.scripts]
+rag-pipeline = "rag_pipeline.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rag_pipeline"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "PTH",    # flake8-use-pathlib
+    "RUF",    # Ruff-specific rules
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in argument defaults
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["rag_pipeline"]
+
+[tool.coverage.run]
+source = ["src/rag_pipeline"]
+branch = true
+omit = ["*/stubs/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]

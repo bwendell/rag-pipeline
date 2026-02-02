@@ -7,7 +7,7 @@ Example: RAG_CHUNK_SIZE=500 sets chunk_size to 500.
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -40,6 +40,12 @@ class RAGSettings(BaseSettings):
 
     embedding_model: str = "all-MiniLM-L6-v2"
     embedding_dimension: int = 384
+    embedding_provider_type: Literal["sentence-transformers", "openai", "oci"] = (
+        "sentence-transformers"
+    )
+    embedding_device: str | None = None  # None means auto-detect (cuda if available, else cpu)
+    embedding_normalize: bool = True
+    embedding_batch_size: int = Field(default=32, ge=1, le=512)
 
     top_k: int = Field(default=5, ge=1, le=50)
     similarity_threshold: float = Field(default=0.5, ge=0.0, le=1.0)
@@ -54,6 +60,15 @@ class RAGSettings(BaseSettings):
             min_chunk_size=self.min_chunk_size,
             max_chunk_size=self.max_chunk_size,
         )
+
+    def to_embedding_config(self) -> dict[str, Any]:
+        """Create embedding provider configuration from these settings."""
+        return {
+            "model_name": self.embedding_model,
+            "device": self.embedding_device,
+            "normalize_embeddings": self.embedding_normalize,
+            "batch_size": self.embedding_batch_size,
+        }
 
 
 @lru_cache

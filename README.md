@@ -155,7 +155,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed extension guides.
 - [x] Phase 0: Project Scaffolding
 - [x] Phase 1: Core Abstractions
 - [x] Phase 2: Chunking Engine
-- [ ] Phase 3: Embedding Provider
+- [x] Phase 3: Embedding Provider
 - [ ] Phase 4: Vector Store (ChromaDB)
 - [ ] Phase 5: LLM Provider (Ollama)
 - [ ] Phase 6: Document Sources (Filesystem)

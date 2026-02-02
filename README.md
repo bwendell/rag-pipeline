@@ -156,8 +156,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed extension guides.
 - [x] Phase 1: Core Abstractions
 - [x] Phase 2: Chunking Engine
 - [x] Phase 3: Embedding Provider
-- [ ] Phase 4: Vector Store (ChromaDB)
-- [ ] Phase 5: LLM Provider (Ollama)
+- [x] Phase 4: Vector Store (ChromaDB)
+- [x] Phase 5: LLM Provider (Ollama)
 - [ ] Phase 6: Document Sources (Filesystem)
 - [ ] Phase 7: Pipeline Orchestration
 - [ ] Phase 8: HTTP API

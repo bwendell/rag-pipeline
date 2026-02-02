@@ -17,21 +17,21 @@ Example:
 """
 
 from rag_pipeline.document_sources.base import (
+    EXTENSION_LANGUAGE_MAP,
+    EXTENSION_TYPE_MAP,
     AbstractDocumentSource,
     DocumentSourceConfig,
-    EXTENSION_TYPE_MAP,
-    EXTENSION_LANGUAGE_MAP,
 )
-from rag_pipeline.document_sources.filesystem_source import FileSystemSource
 from rag_pipeline.document_sources.factory import (
     DocumentSourceFactory,
     default_factory,
 )
-from rag_pipeline.document_sources.stubs.git_source import GitSource, GitSourceConfig
+from rag_pipeline.document_sources.filesystem_source import FileSystemSource
 from rag_pipeline.document_sources.stubs.confluence_source import (
     ConfluenceSource,
     ConfluenceSourceConfig,
 )
+from rag_pipeline.document_sources.stubs.git_source import GitSource, GitSourceConfig
 from rag_pipeline.document_sources.stubs.s3_source import S3Source, S3SourceConfig
 
 __all__ = [

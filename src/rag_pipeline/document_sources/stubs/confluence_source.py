@@ -23,9 +23,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from rag_pipeline.document_sources.base import AbstractDocumentSource, DocumentSourceConfig
-from rag_pipeline.core.types import Document, SourceType
 from rag_pipeline.core.exceptions import NotImplementedSourceError
+from rag_pipeline.core.types import Document, SourceType
+from rag_pipeline.document_sources.base import AbstractDocumentSource, DocumentSourceConfig
 
 
 @dataclass

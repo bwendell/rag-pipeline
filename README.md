@@ -158,7 +158,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed extension guides.
 - [x] Phase 3: Embedding Provider
 - [x] Phase 4: Vector Store (ChromaDB)
 - [x] Phase 5: LLM Provider (Ollama)
-- [ ] Phase 6: Document Sources (Filesystem)
+- [x] Phase 6: Document Sources (Filesystem)
 - [ ] Phase 7: Pipeline Orchestration
 - [ ] Phase 8: HTTP API
 

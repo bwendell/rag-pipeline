@@ -19,14 +19,13 @@ from typing import Any
 
 import pathspec
 
+from rag_pipeline.core.exceptions import DocumentSourceError
 from rag_pipeline.core.types import (
     Document,
     DocumentType,
     Metadata,
     SourceType,
 )
-from rag_pipeline.core.exceptions import DocumentSourceError
-
 
 # File extension to DocumentType mapping
 EXTENSION_TYPE_MAP: dict[str, DocumentType] = {

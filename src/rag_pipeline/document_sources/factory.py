@@ -7,21 +7,21 @@ with support for registration of custom sources.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Type
+from typing import Any
 
+from rag_pipeline.core.exceptions import ConfigurationError
+from rag_pipeline.core.types import SourceType
 from rag_pipeline.document_sources.base import (
     AbstractDocumentSource,
     DocumentSourceConfig,
 )
 from rag_pipeline.document_sources.filesystem_source import FileSystemSource
-from rag_pipeline.document_sources.stubs.git_source import GitSource, GitSourceConfig
 from rag_pipeline.document_sources.stubs.confluence_source import (
     ConfluenceSource,
     ConfluenceSourceConfig,
 )
+from rag_pipeline.document_sources.stubs.git_source import GitSource, GitSourceConfig
 from rag_pipeline.document_sources.stubs.s3_source import S3Source, S3SourceConfig
-from rag_pipeline.core.types import SourceType
-from rag_pipeline.core.exceptions import ConfigurationError
 
 
 class DocumentSourceFactory:
@@ -44,7 +44,7 @@ class DocumentSourceFactory:
     """
 
     # Registry of source types to classes
-    _registry: dict[SourceType, Type[AbstractDocumentSource]] = {
+    _registry: dict[SourceType, type[AbstractDocumentSource]] = {
         SourceType.FILESYSTEM: FileSystemSource,
         SourceType.GIT: GitSource,
         SourceType.CONFLUENCE: ConfluenceSource,
@@ -197,7 +197,7 @@ class DocumentSourceFactory:
     def register(
         cls,
         source_type: SourceType,
-        source_cls: Type[AbstractDocumentSource],
+        source_cls: type[AbstractDocumentSource],
     ) -> None:
         """Register a custom document source.
 

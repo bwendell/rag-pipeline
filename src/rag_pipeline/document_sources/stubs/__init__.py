@@ -7,14 +7,14 @@ All stub sources will raise NotImplementedSourceError when their
 load() methods are called.
 """
 
+from rag_pipeline.document_sources.stubs.confluence_source import (
+    ConfluenceSource,
+    ConfluenceSourceConfig,
+)
 from rag_pipeline.document_sources.stubs.git_source import (
     GitSource,
     GitSourceConfig,
     VBSConfig,
-)
-from rag_pipeline.document_sources.stubs.confluence_source import (
-    ConfluenceSource,
-    ConfluenceSourceConfig,
 )
 from rag_pipeline.document_sources.stubs.s3_source import (
     S3Source,

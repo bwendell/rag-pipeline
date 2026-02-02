@@ -267,3 +267,19 @@ class GenerationError(RAGPipelineError):
     """
 
     pass
+
+
+class NotImplementedSourceError(RAGPipelineError):
+    """Raised when using a stub document source.
+
+    Indicates that a document source is defined but not yet implemented.
+    Provides guidance on alternatives and future implementation.
+
+    Example:
+        >>> raise NotImplementedSourceError(
+        ...     "Document source not yet implemented",
+        ...     details={"source_type": "confluence", "available": ["local_files", "git"]}
+        ... )
+    """
+
+    pass

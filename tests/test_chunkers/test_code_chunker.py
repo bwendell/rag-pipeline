@@ -1095,3 +1095,1112 @@ def function_two():
 
         for chunk in chunks:
             assert_chunk_content_matches_indices(chunk, document)
+
+
+
+# =============================================================================
+# Python Language Edge Case Tests
+# =============================================================================
+
+
+class TestPythonEdgeCases:
+    """Test Python-specific language edge cases and advanced syntax."""
+
+    def test_async_function_definitions(self, chunking_config: ChunkingConfig):
+        """Verify async function definitions are properly chunked."""
+        code = """async def fetch_data(url: str) -> dict:
+    \"""Fetch data from URL asynchronously.\"""
+    response = await get(url)
+    data = await response.json()
+    return data
+
+async def process_items(items: list) -> None:
+    \"""Process items concurrently.\"""
+    tasks = [fetch_data(item) for item in items]
+    results = await gather(*tasks)
+    return results
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/async_funcs.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("fetch_data" in chunk.content for chunk in chunks)
+        assert any("process_items" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_type_hints_and_annotations(self, chunking_config: ChunkingConfig):
+        """Verify functions with complex type hints are chunked correctly."""
+        code = """from typing import Dict, List, Optional, Tuple, Union
+
+def complex_types(
+    items: List[Dict[str, int]],
+    mapping: Optional[Dict[str, List[str]]] = None,
+    callbacks: Tuple[callable, ...] = (),
+) -> Union[str, int, None]:
+    \"""Function with complex type annotations.\"""
+    if mapping is None:
+        mapping = {}
+    result = process(items, mapping)
+    return result
+
+def generic_function(value: T) -> T:
+    \"""Generic function with type variable.\"""
+    return value
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/type_hints.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("complex_types" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_generator_functions(self, chunking_config: ChunkingConfig):
+        """Verify generator functions are properly chunked."""
+        code = """def fibonacci(n: int):
+    \"""Generate Fibonacci sequence.\"""
+    a, b = 0, 1
+    for _ in range(n):
+        yield a
+        a, b = b, a + b
+
+def data_generator():
+    \"""Generate data from multiple sources.\"""
+    for item in source_one():
+        yield process(item)
+    for item in source_two():
+        yield transform(item)
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/generators.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("fibonacci" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_context_managers(self, chunking_config: ChunkingConfig):
+        """Verify context manager definitions are chunked correctly."""
+        code = """class DatabaseConnection:
+    \"""Context manager for database connections.\"""
+
+    def __init__(self, connection_string: str):
+        self.connection = None
+        self.connection_string = connection_string
+
+    def __enter__(self):
+        self.connection = connect(self.connection_string)
+        return self.connection
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.connection:
+            self.connection.close()
+        return False
+
+@contextmanager
+def temporary_file(prefix: str = "temp"):
+    \"""Context manager for temporary files.\"""
+    path = mktemp(prefix=prefix)
+    try:
+        yield path
+    finally:
+        remove(path)
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/context_managers.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("DatabaseConnection" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_dataclass_definitions(self, chunking_config: ChunkingConfig):
+        """Verify dataclass definitions are handled correctly."""
+        code = """from dataclasses import dataclass, field
+from typing import List
+
+@dataclass
+class User:
+    \"""User data class.\"""
+    id: int
+    name: str
+    email: str
+    roles: List[str] = field(default_factory=list)
+
+    def is_admin(self) -> bool:
+        return "admin" in self.roles
+
+@dataclass(frozen=True)
+class ImmutableConfig:
+    \"""Immutable configuration data class.\"""
+    api_key: str
+    timeout: int = 30
+    retries: int = 3
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/dataclasses.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("User" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_property_decorators(self, chunking_config: ChunkingConfig):
+        """Verify @property decorators are properly handled."""
+        code = """class Rectangle:
+    \"""Rectangle class with properties.\"""
+
+    def __init__(self, width: float, height: float):
+        self._width = width
+        self._height = height
+
+    @property
+    def area(self) -> float:
+        \"""Calculate area.\"""
+        return self._width * self._height
+
+    @property
+    def perimeter(self) -> float:
+        \"""Calculate perimeter.\"""
+        return 2 * (self._width + self._height)
+
+    @width.setter
+    def width(self, value: float) -> None:
+        \"""Set width with validation.\"""
+        if value <= 0:
+            raise ValueError("Width must be positive")
+        self._width = value
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/properties.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("Rectangle" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+
+# =============================================================================
+# JavaScript/TypeScript Edge Case Tests
+# =============================================================================
+
+
+class TestJavaScriptEdgeCases:
+    """Test JavaScript-specific language features and syntax."""
+
+    def test_arrow_functions(self, chunking_config: ChunkingConfig):
+        """Verify arrow function definitions are chunked properly."""
+        code = """const map_values = (obj) => {
+    return Object.entries(obj).reduce((acc, [k, v]) => {
+        acc[k] = v * 2;
+        return acc;
+    }, {});
+};
+
+const async_fetch = async (url) => {
+    const response = await fetch(url);
+    return response.json();
+};
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/arrow_funcs.js",
+                source_type=SourceType.FILESYSTEM,
+                language="javascript",
+                file_extension=".js",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_class_with_inheritance(self, chunking_config: ChunkingConfig):
+        """Verify JavaScript class inheritance is handled."""
+        code = """class Animal {
+    constructor(name) {
+        this.name = name;
+    }
+
+    speak() {
+        console.log(`${this.name} makes a sound`);
+    }
+}
+
+class Dog extends Animal {
+    constructor(name, breed) {
+        super(name);
+        this.breed = breed;
+    }
+
+    speak() {
+        console.log(`${this.name} barks`);
+    }
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/js_classes.js",
+                source_type=SourceType.FILESYSTEM,
+                language="javascript",
+                file_extension=".js",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("Animal" in chunk.content or "Dog" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_async_await_patterns(self, chunking_config: ChunkingConfig):
+        """Verify async/await patterns are properly chunked."""
+        code = """async function processQueue(queue) {
+    const results = [];
+    for (const item of queue) {
+        try {
+            const result = await processItem(item);
+            results.push(result);
+        } catch (error) {
+            console.error(`Failed to process ${item}:`, error);
+        }
+    }
+    return results;
+}
+
+async function parallelFetch(urls) {
+    const promises = urls.map(url => fetch(url));
+    return Promise.all(promises);
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/async_await.js",
+                source_type=SourceType.FILESYSTEM,
+                language="javascript",
+                file_extension=".js",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("processQueue" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_template_literals(self, chunking_config: ChunkingConfig):
+        """Verify template literals with expressions are handled."""
+        code = """function createMessage(user, action) {
+    return `User ${user.name} performed ${action} at ${new Date().toISOString()}`;
+}
+
+function multilineString() {
+    return `
+        This is a multiline
+        template literal with ${variable}
+        and expressions: ${2 + 2}
+    `;
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/templates.js",
+                source_type=SourceType.FILESYSTEM,
+                language="javascript",
+                file_extension=".js",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_destructuring_assignments(self, chunking_config: ChunkingConfig):
+        """Verify destructuring patterns are properly handled."""
+        code = """function processUser({name, email, ...rest}) {
+    console.log(name, email);
+    return rest;
+}
+
+const {x, y} = point;
+const [first, ...rest] = array;
+const {a: renamed, b} = object;
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/destructure.js",
+                source_type=SourceType.FILESYSTEM,
+                language="javascript",
+                file_extension=".js",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+
+# =============================================================================
+# Java Language Edge Case Tests
+# =============================================================================
+
+
+class TestJavaEdgeCases:
+    """Test Java-specific language features and syntax."""
+
+    def test_generic_classes(self, chunking_config: ChunkingConfig):
+        """Verify generic class definitions are handled."""
+        code = """public class Container<T> {
+    private T value;
+
+    public Container(T value) {
+        this.value = value;
+    }
+
+    public T getValue() {
+        return value;
+    }
+
+    public <U> Container<U> map(Function<T, U> fn) {
+        return new Container<>(fn.apply(value));
+    }
+}
+
+public class Pair<K, V> {
+    private K key;
+    private V value;
+
+    public Pair(K key, V value) {
+        this.key = key;
+        this.value = value;
+    }
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/generics.java",
+                source_type=SourceType.FILESYSTEM,
+                language="java",
+                file_extension=".java",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("Container" in chunk.content or "Pair" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_annotations(self, chunking_config: ChunkingConfig):
+        """Verify Java annotations are properly handled."""
+        code = """@Deprecated(since = "2.0", forRemoval = true)
+public void oldMethod() {
+    // Implementation
+}
+
+@Override
+public String toString() {
+    return super.toString();
+}
+
+@SuppressWarnings("unchecked")
+public List<String> getList() {
+    return (List<String>) (List<?>) new ArrayList<>();
+}
+
+@FunctionalInterface
+public interface Processor {
+    void process(String input);
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/annotations.java",
+                source_type=SourceType.FILESYSTEM,
+                language="java",
+                file_extension=".java",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_interface_definitions(self, chunking_config: ChunkingConfig):
+        """Verify interface definitions are chunked correctly."""
+        code = """public interface DataRepository<T> {
+    T findById(long id);
+    List<T> findAll();
+    void save(T entity);
+    void delete(T entity);
+}
+
+public interface CacheableRepository extends DataRepository {
+    void clearCache();
+    long getCacheSize();
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/interfaces.java",
+                source_type=SourceType.FILESYSTEM,
+                language="java",
+                file_extension=".java",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("DataRepository" in chunk.content or "CacheableRepository" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_try_with_resources(self, chunking_config: ChunkingConfig):
+        """Verify try-with-resources statements are handled."""
+        code = """public void readFile(String path) throws IOException {
+    try (FileReader reader = new FileReader(path);
+         BufferedReader buffer = new BufferedReader(reader)) {
+        String line;
+        while ((line = buffer.readLine()) != null) {
+            process(line);
+        }
+    } catch (IOException e) {
+        logger.error("Failed to read file", e);
+    }
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/try_resources.java",
+                source_type=SourceType.FILESYSTEM,
+                language="java",
+                file_extension=".java",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+
+# =============================================================================
+# Go Language Edge Case Tests
+# =============================================================================
+
+
+class TestGoEdgeCases:
+    """Test Go-specific language features and syntax."""
+
+    def test_goroutine_functions(self, chunking_config: ChunkingConfig):
+        """Verify goroutine launch patterns are handled."""
+        code = """func worker(id int, jobs <-chan int, results chan<- int) {
+    for j := range jobs {
+        fmt.Println("worker", id, "started job", j)
+        time.Sleep(time.Second)
+        fmt.Println("worker", id, "finished job", j)
+        results <- j * 2
+    }
+}
+
+func processInParallel(items []int, numWorkers int) []int {
+    jobs := make(chan int, len(items))
+    results := make(chan int, len(items))
+
+    for w := 1; w <= numWorkers; w++ {
+        go worker(w, jobs, results)
+    }
+
+    for _, item := range items {
+        jobs <- item
+    }
+    close(jobs)
+
+    var output []int
+    for range items {
+        output = append(output, <-results)
+    }
+    return output
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/goroutines.go",
+                source_type=SourceType.FILESYSTEM,
+                language="go",
+                file_extension=".go",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("worker" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_defer_statements(self, chunking_config: ChunkingConfig):
+        """Verify defer statements are properly chunked."""
+        code = """func copyFile(dst, src string) error {
+    source, err := os.Open(src)
+    if err != nil {
+        return err
+    }
+    defer source.Close()
+
+    destination, err := os.Create(dst)
+    if err != nil {
+        return err
+    }
+    defer destination.Close()
+
+    _, err = io.Copy(destination, source)
+    return err
+}
+
+func transactionExample(db *sql.DB) error {
+    tx, err := db.Begin()
+    if err != nil {
+        return err
+    }
+    defer tx.Rollback()
+
+    return tx.Commit().Error
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/defer.go",
+                source_type=SourceType.FILESYSTEM,
+                language="go",
+                file_extension=".go",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("copyFile" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_interface_implementations(self, chunking_config: ChunkingConfig):
+        """Verify Go interface implementations are handled."""
+        code = """type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+
+type ReadWriter interface {
+    Reader
+    Writer
+}
+
+func processStream(rw ReadWriter) error {
+    buffer := make([]byte, 1024)
+    n, err := rw.Read(buffer)
+    if err != nil {
+        return err
+    }
+    processed := process(buffer[:n])
+    _, err = rw.Write(processed)
+    return err
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/interfaces.go",
+                source_type=SourceType.FILESYSTEM,
+                language="go",
+                file_extension=".go",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("Reader" in chunk.content or "Writer" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_error_handling_patterns(self, chunking_config: ChunkingConfig):
+        """Verify Go error handling patterns are chunked correctly."""
+        code = """func divide(a, b int) (int, error) {
+    if b == 0 {
+        return 0, errors.New("division by zero")
+    }
+    return a / b, nil
+}
+
+func operation() error {
+    result, err := divide(10, 2)
+    if err != nil {
+        return fmt.Errorf("operation failed: %w", err)
+    }
+    fmt.Println(result)
+    return nil
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/errors.go",
+                source_type=SourceType.FILESYSTEM,
+                language="go",
+                file_extension=".go",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("divide" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+
+# =============================================================================
+# Parsing Error and Fallback Tests
+# =============================================================================
+
+
+class TestParsingErrorsFallback:
+    """Test error handling and fallback mechanisms for parse failures."""
+
+    def test_python_syntax_error_fallback(self, chunking_config: ChunkingConfig):
+        """Verify Python syntax errors trigger line-based fallback."""
+        code = """def broken_function(
+    missing_closing_paren:
+        pass
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/syntax_error.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_javascript_unclosed_bracket(self, chunking_config: ChunkingConfig):
+        """Verify JavaScript unclosed brackets trigger fallback."""
+        code = """function broken() {
+    const obj = {
+        key: "value",
+        nested: {
+            data: [1, 2, 3
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/js_syntax_error.js",
+                source_type=SourceType.FILESYSTEM,
+                language="javascript",
+                file_extension=".js",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_java_missing_semicolon(self, chunking_config: ChunkingConfig):
+        """Verify Java missing semicolons trigger fallback."""
+        code = """public class BrokenClass {
+    private int value
+
+    public void method() {
+        value = 42
+        return
+    }
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/java_syntax_error.java",
+                source_type=SourceType.FILESYSTEM,
+                language="java",
+                file_extension=".java",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_go_missing_return_type(self, chunking_config: ChunkingConfig):
+        """Verify Go missing return types trigger fallback."""
+        code = """func brokenFunction() {
+    var x = 10
+    y := 20
+    return x + y
+}
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/go_syntax_error.go",
+                source_type=SourceType.FILESYSTEM,
+                language="go",
+                file_extension=".go",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+
+# =============================================================================
+# Unicode and Multi-Language Content Tests
+# =============================================================================
+
+
+class TestUnicodeAndMultiLanguage:
+    """Test Unicode handling and multi-language content in code."""
+
+    def test_unicode_identifiers_python(self, chunking_config: ChunkingConfig):
+        """Verify Python code with Unicode identifiers is handled."""
+        code = """def 计算(x: int, y: int) -> int:
+    \"""计算两个数的和.\"""
+    return x + y
+
+def процесс_данных(items: list) -> list:
+    \"""处理数据列表.\"""
+    результат = []
+    for 项目 in items:
+        результат.append(项目 * 2)
+    return результат
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/unicode_identifiers.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_emoji_in_comments(self, chunking_config: ChunkingConfig):
+        """Verify emoji in comments are properly handled."""
+        code = """def process_data(data: list) -> dict:
+    \"""Process data 🚀 efficiently ⚡.\"""
+    result = {}
+    for item in data:
+        result[item.id] = item.value
+    return result
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/emoji_comments.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_mixed_language_content(self, chunking_config: ChunkingConfig):
+        """Verify mixed language content (comments in different languages)."""
+        code = """def translate(text: str) -> str:
+    \"""
+    Translate text to multiple languages.
+
+    English: Translates the input text
+    Spanish: Traduce el texto de entrada
+    French: Traduit le texte d'entrée
+    German: Übersetzt den Eingabetext
+    Chinese: 翻译输入文本
+    Japanese: 入力テキストを翻訳します
+    \"""
+    translated = internal_translate(text)
+    return translated
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/mixed_language.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+
+# =============================================================================
+# Large File and Complex Structure Tests
+# =============================================================================
+
+
+class TestLargeFilesAndComplexStructures:
+    """Test handling of large files and deeply nested structures."""
+
+    def test_very_large_function(self, chunking_config: ChunkingConfig):
+        """Verify very large functions are split appropriately."""
+        statements = "\\n    ".join([f"result += calculate({i})" for i in range(100)])
+        code = f"""def mega_function():
+    \"""A very large function with many statements.\"""
+    result = 0
+    {statements}
+    return result
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/large_func.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_deeply_nested_classes(self, chunking_config: ChunkingConfig):
+        """Verify deeply nested class definitions are handled."""
+        code = """class OuterClass:
+    \"""Outer class.\"""
+
+    class InnerClass:
+        \"""Inner class.\"""
+
+        class DeeperClass:
+            \"""Even deeper class.\"""
+
+            class DeepestClass:
+                \"""Deepest class.\"""
+
+                def deep_method(self):
+                    return "deeply nested"
+
+            def deeper_method(self):
+                return DeepestClass()
+
+        def inner_method(self):
+            return DeeperClass()
+
+    def outer_method(self):
+        return InnerClass()
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/nested_classes.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        assert any("OuterClass" in chunk.content for chunk in chunks)
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_complex_lambda_expressions(self, chunking_config: ChunkingConfig):
+        """Verify complex lambda expressions are properly handled."""
+        code = """def setup_operations():
+    \"""Setup complex lambda operations.\"""
+    operations = {
+        "map": lambda items, fn: list(map(fn, items)),
+        "filter": lambda items, pred: list(filter(pred, items)),
+        "reduce": lambda items, fn, init: reduce(fn, items, init),
+    }
+    return operations
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/complex_lambdas.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
+
+    def test_module_with_many_imports(self, chunking_config: ChunkingConfig):
+        """Verify modules with many imports are handled."""
+        imports = "\\n".join([f"from module_{i} import func_{i}" for i in range(30)])
+        code = f"""{imports}
+
+def main():
+    \"""Call imported functions.\"""
+    results = []
+    for i in range(30):
+        results.append(globals()[f"func_{{i}}"](i))
+    return results
+"""
+        document = Document(
+            content=code,
+            doc_type=DocumentType.CODE,
+            metadata=Metadata(
+                source_path="/test/many_imports.py",
+                source_type=SourceType.FILESYSTEM,
+                language="python",
+                file_extension=".py",
+            ),
+        )
+        chunker = CodeChunker(chunking_config)
+        chunks = chunker.chunk(document)
+
+        assert len(chunks) > 0
+        for chunk in chunks:
+            assert_chunk_valid(chunk)
